@@ -1,6 +1,7 @@
 import json
 import os
 from dataclasses import dataclass
+from getpass import getpass
 from typing import Optional
 
 import requests
@@ -40,7 +41,9 @@ class GitHubClient:  # pragma: no cover
         This will read from the `GITHUB_TOKEN` env var if set, or prompt for
         a token otherwise.
         """
-        access_token = os.environ["GITHUB_TOKEN"]
+        access_token = os.environ.get("GITHUB_TOKEN")
+        if not access_token:
+            access_token = getpass("GitHub API token: ")
         return GitHubClient(access_token)
 
 
