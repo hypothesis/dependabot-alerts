@@ -5,10 +5,6 @@ import pytest
 from dependabot_alerts.cli import cli
 
 
-def test_it():
-    cli([])
-
-
 def test_help():
     with pytest.raises(SystemExit) as exc_info:
         cli(["--help"])
@@ -17,7 +13,8 @@ def test_help():
 
 
 def test_version(capsys):
-    exit_code = cli(["--version"])
+    with pytest.raises(SystemExit) as exc_info:
+        cli(["--version"])
 
     assert capsys.readouterr().out.strip() == version("dependabot-alerts")
-    assert not exit_code
+    assert not exc_info.value.code
