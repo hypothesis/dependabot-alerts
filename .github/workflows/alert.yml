@@ -16,7 +16,7 @@ jobs:
       - name: Install gha-token
         run: python -m pipx install "git+https://github.com/hypothesis/gha-token.git"
       - name: Checkout dependabot-alerts
-      - uses: actions/checkout@v4
+        uses: actions/checkout@v4
       - name: Install dependabot-alerts
         run: python -m pipx install .
       - name: Get GitHub token
