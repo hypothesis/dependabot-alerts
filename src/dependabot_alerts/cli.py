@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 from importlib.metadata import version
-from typing import List
 
 from dependabot_alerts.core import GitHubClient, Vulnerability, fetch_alerts
 
@@ -22,7 +21,7 @@ def cli(_argv=None):  # pragma: no cover
 
 
 def format_slack_message(
-    organization: str, vulns: List[Vulnerability]
+    organization: str, vulns: list[Vulnerability]
 ) -> str:  # pragma: no cover
     """
     Format a Slack status report from a list of vulnerabilities.

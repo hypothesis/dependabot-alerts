@@ -1,7 +1,7 @@
 import json
 import os
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional
 
 import requests
 
@@ -79,7 +79,7 @@ class Vulnerability:  # pylint:disable=too-many-instance-attributes
 
 def fetch_alerts(
     gh: GitHubClient, organization: str
-) -> List[Vulnerability]:  # pragma: no cover
+) -> list[Vulnerability]:  # pragma: no cover
     """
     Fetch details of all open vulnerability alerts in `organization`.
 
