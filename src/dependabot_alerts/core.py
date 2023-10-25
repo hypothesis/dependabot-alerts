@@ -1,184 +1,68 @@
+from __future__ import annotations
+
 import json
-import os
-from dataclasses import dataclass
-from getpass import getpass
-from typing import Optional
-
-import requests
+import sys
+from dataclasses import dataclass, field
+from subprocess import CalledProcessError
 
 
-class GitHubClient:  # pragma: no cover
-    """
-    Client for GitHub's GraphQL API.
-
-    See https://docs.github.com/en/graphql.
-    """
-
-    def __init__(self, token):
-        self.token = token
-        self.endpoint = "https://api.github.com/graphql"
-
-    def query(self, query, variables=None):
-        data = {"query": query, "variables": variables if variables is not None else {}}
-        result = requests.post(
-            url=self.endpoint,
-            headers={"Authorization": f"Bearer {self.token}"},
-            data=json.dumps(data),
-            timeout=(30, 30),
-        )
-        body = result.json()
-        result.raise_for_status()
-        if "errors" in body:
-            errors = body["errors"]
-            raise RuntimeError(f"Query failed: {json.dumps(errors)}")
-        return body["data"]
+@dataclass(frozen=True)
+class Alert:  # pylint:disable=too-many-instance-attributes
+    repo_full_name: str | None
+    ghsa_id: str | None
+    html_url: str | None = field(compare=False)
+    package: str | None = field(compare=False)
+    manifest_path: str | None = field(compare=False)
+    summary: str | None = field(compare=False)
+    severity: str | None = field(compare=False)
+    duplicates: list[Alert] = field(compare=False, default_factory=list)
 
     @classmethod
-    def init(cls):
-        """
-        Initialize an authenticated GitHubClient.
-
-        This will read from the `GITHUB_TOKEN` env var if set, or prompt for
-        a token otherwise.
-        """
-        access_token = os.environ.get("GITHUB_TOKEN")
-        if not access_token:
-            access_token = getpass("GitHub API token: ")
-        return GitHubClient(access_token)
-
-
-@dataclass
-class Vulnerability:  # pylint:disable=too-many-instance-attributes
-    repo: str
-    """Repository where this vulnerability was reported."""
-
-    created_at: str
-    """ISO date when this alert was created."""
-
-    package_name: str
-    """Name of the vulnerable package."""
-
-    ecosystem: str
-    """Package ecosytem (eg. npm) that the package comes from."""
-
-    severity: str
-    """Vulnerability severity level."""
-
-    version_range: str
-    """Version ranges of package affected by vulnerability."""
-
-    number: str
-    """Number of this vulnerability report."""
-
-    url: str
-    """Link to the vulernability report on GitHub."""
-
-    pr: Optional[str]
-    """Link to the Dependabot update PR that resolves this vulnerability."""
-
-    title: str
-    """Summary of what the vulnerability is."""
-
-
-def fetch_alerts(
-    gh: GitHubClient, organization: str
-) -> list[Vulnerability]:  # pragma: no cover
-    """
-    Fetch details of all open vulnerability alerts in `organization`.
-
-    To reduce the volume of noise, especially for repositories which include the
-    same dependency in multiple lockfiles, only one vulnerability is reported
-    per package per repository.
-
-    Vulnerabilities are not reported from archived repositories.
-    """
-    # pylint:disable=too-many-locals
-
-    query = """
-query($organization: String!, $cursor: String) {
-  organization(login: $organization) {
-    repositories(first: 100, after: $cursor) {
-      pageInfo {
-        endCursor
-        hasNextPage
-      }
-      nodes {
-        name
-        vulnerabilityAlerts(first: 100, states:OPEN) {
-          nodes {
-            number
-            createdAt
-            dependabotUpdate {
-              pullRequest {
-                url
-              }
-            }
-            securityAdvisory {
-              summary
-            }
-            securityVulnerability {
-              package {
-                name
-                ecosystem
-              }
-              severity
-              vulnerableVersionRange
-            }
-          }
-        }
-      }
-    }
-  }
-}
-"""
-
-    vulns = []
-    cursor = None
-    has_next_page = True
-
-    while has_next_page:
-        result = gh.query(
-            query=query, variables={"organization": organization, "cursor": cursor}
+    def make(cls, alert_dict):
+        return cls(
+            repo_full_name=alert_dict["repository"]["full_name"],
+            ghsa_id=alert_dict["security_advisory"]["ghsa_id"],
+            html_url=alert_dict["html_url"],
+            package=alert_dict["dependency"]["package"]["name"],
+            manifest_path=alert_dict["dependency"]["manifest_path"],
+            summary=alert_dict["security_advisory"]["summary"],
+            severity=alert_dict["security_advisory"]["severity"],
         )
-        page_info = result["organization"]["repositories"]["pageInfo"]
-        cursor = page_info["endCursor"]
-        has_next_page = page_info["hasNextPage"]
 
-        for repo in result["organization"]["repositories"]["nodes"]:
-            alerts = repo["vulnerabilityAlerts"]["nodes"]
 
-            if alerts:
-                repo_name = repo["name"]
-                vulnerable_packages = set()
+class GitHub:
+    def __init__(self, run):
+        self._run = run
 
-                for alert in alerts:
-                    sa = alert["securityAdvisory"]
-                    sv = alert["securityVulnerability"]
-                    number = alert["number"]
-                    package_name = sv["package"]["name"]
+    def alerts(self, organization) -> list[Alert]:
+        try:
+            result = self._run(
+                [
+                    "gh",
+                    "api",
+                    "--paginate",
+                    f"/orgs/{organization}/dependabot/alerts?state=open",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        except CalledProcessError as err:  # pragma: no cover
+            for line in err.stdout.splitlines():
+                print(f"GitHub CLI stdout> {line}")
+            for line in err.stderr.splitlines():
+                print(f"GitHub CLI stderr> {line}", file=sys.stderr)
+            raise
 
-                    if package_name in vulnerable_packages:
-                        continue
-                    vulnerable_packages.add(package_name)
+        alert_dicts = json.loads(result.stdout)
 
-                    pr = None
+        alerts = {}
 
-                    dep_update = alert["dependabotUpdate"]
-                    if dep_update and dep_update["pullRequest"]:
-                        pr = dep_update["pullRequest"]["url"]
+        for alert_dict in alert_dicts:
+            alert = Alert.make(alert_dict)
+            if alert in alerts:
+                alerts[alert].duplicates.append(alert)
+            else:
+                alerts[alert] = alert
 
-                    vuln = Vulnerability(
-                        repo=repo_name,
-                        created_at=alert["createdAt"],
-                        ecosystem=sv["package"]["ecosystem"],
-                        number=number,
-                        package_name=sv["package"]["name"],
-                        pr=pr,
-                        severity=sv["severity"],
-                        title=sa["summary"],
-                        url=f"https://github.com/{organization}/{repo_name}/security/dependabot/{number}",
-                        version_range=sv["vulnerableVersionRange"],
-                    )
-                    vulns.append(vuln)
-
-    return vulns
+        return list(alerts.values())
