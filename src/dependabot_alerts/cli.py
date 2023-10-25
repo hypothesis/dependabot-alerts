@@ -7,14 +7,12 @@ from dependabot_alerts.core import GitHubClient, Vulnerability, fetch_alerts
 
 def cli(_argv=None):  # pragma: no cover
     parser = ArgumentParser()
-    parser.add_argument("-v", "--version", action="store_true")
+    parser.add_argument(
+        "-v", "--version", action="version", version=version("dependabot-alerts")
+    )
     parser.add_argument("organization", help="GitHub user or organization")
 
     args = parser.parse_args(_argv)
-
-    if args.version:
-        print(version("dependabot-alerts"))
-        return 0
 
     gh_client = GitHubClient.init()
     vulns = fetch_alerts(gh_client, args.organization)

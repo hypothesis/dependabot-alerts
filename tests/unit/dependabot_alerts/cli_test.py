@@ -12,9 +12,9 @@ def test_help():
     assert not exc_info.value.code
 
 
-@pytest.mark.xfail
-def test_version(capsys):  # pragma: no cover
-    exit_code = cli(["--version"])
+def test_version(capsys):
+    with pytest.raises(SystemExit) as exc_info:
+        cli(["--version"])
 
     assert capsys.readouterr().out.strip() == version("dependabot-alerts")
-    assert not exit_code
+    assert not exc_info.value.code
