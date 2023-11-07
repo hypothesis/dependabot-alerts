@@ -2,7 +2,7 @@
   "template": "https://github.com/hypothesis/cookiecutters",
   "checkout": null,
   "directory": "pypackage",
-  "ignore": ["tests/unit/dependabot_alerts/core_test.py"],
+  "ignore": ["tests/functional/sanity_test.py"],
   "extra_context": {
     "name": "Dependabot Alerts",
     "package_name": "dependabot_alerts",
