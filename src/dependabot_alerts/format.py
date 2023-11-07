@@ -27,7 +27,7 @@ def format_slack(alerts: list[Alert], organization: str) -> str:
 
     return "\n".join(
         [
-            f"*There are Dependabot security alerts in the {organization} GitHub organization:*",
+            f"There are Dependabot security alerts in the {organization} GitHub organization:",
             "",
             *[
                 " ".join(

@@ -28,7 +28,7 @@ class TestFormatSlack:
     def test_with_alerts(self, alerts):
         assert format_slack(alerts, "hypothesis") == "\n".join(
             [
-                "*There are Dependabot security alerts in the hypothesis GitHub organization:*",
+                "There are Dependabot security alerts in the hypothesis GitHub organization:",
                 "",
                 "<html_url_1|organization/foo GHSA-1> alerts:1 severity:low `package_1` summary_1",
                 "<html_url_2|organization/bar GHSA-2> alerts:3 severity:high `package_2` summary_2",
