@@ -1,4 +1,5 @@
 """Functions for serializing lists of Alerts into different string formats."""
+
 from dependabot_alerts.core import Alert
 
 
