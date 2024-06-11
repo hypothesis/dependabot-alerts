@@ -8,7 +8,7 @@
     "package_name": "dependabot_alerts",
     "slug": "dependabot-alerts",
     "short_description": "Notifications of Dependabot alerts across a GitHub organization.",
-    "python_versions": "3.12.3, 3.11.6",
+    "python_versions": "3.12.4, 3.11.9, 3.10.14, 3.9.19",
     "github_owner": "hypothesis",
     "copyright_holder": "Hypothesis",
     "visibility": "public",
