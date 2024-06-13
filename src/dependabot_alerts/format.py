@@ -8,13 +8,13 @@ def format_text(alerts: list[Alert], _organization: str) -> str:
         [
             " ".join(
                 [
-                    alert.repo_full_name,
-                    alert.ghsa_id,
+                    alert.repo_full_name or "",
+                    alert.ghsa_id or "",
                     f"alerts:{len(alert.duplicates) + 1}",
                     f"severity:{alert.severity}",
-                    alert.package,
-                    alert.html_url,
-                    alert.summary,
+                    alert.package or "",
+                    alert.html_url or "",
+                    alert.summary or "",
                 ]
             )
             for alert in alerts
@@ -37,7 +37,7 @@ def format_slack(alerts: list[Alert], organization: str) -> str:
                         f"alerts:{len(alert.duplicates) + 1}",
                         f"severity:{alert.severity}",
                         f"`{alert.package}`",
-                        alert.summary,
+                        alert.summary or "",
                     ]
                 )
                 for alert in alerts
