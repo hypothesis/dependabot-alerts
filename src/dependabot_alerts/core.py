@@ -56,7 +56,7 @@ class GitHub:
 
         alert_dicts = json.loads(result.stdout)
 
-        alerts = {}
+        alerts: dict[Alert, Alert] = {}
 
         for alert_dict in alert_dicts:
             alert = Alert.make(alert_dict)
