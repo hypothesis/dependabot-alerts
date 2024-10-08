@@ -23,7 +23,6 @@
     "__github_url": "https://github.com/hypothesis/dependabot-alerts",
     "__pypi_url": "https://pypi.org/project/dependabot-alerts",
     "__copyright_year": "2023",
-    "__hdev_project_type": "library",
     "__parallel_unit_tests": false,
     "__format_runner_type": "ubuntu-latest",
     "__lint_runner_type": "ubuntu-latest",
