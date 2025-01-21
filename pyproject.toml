@@ -2,6 +2,28 @@
 requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
+[project]
+dynamic = ["version"]
+name = "dependabot-alerts"
+description = "Notifications of Dependabot alerts across a GitHub organization."
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD License",
+    "Intended Audience :: Developers",
+]
+requires-python = ">=3.9"
+dependencies = [
+]
+
+[project.urls]
+Repository = "https://github.com/hypothesis/dependabot-alerts"
+Issues = "https://github.com/hypothesis/dependabot-alerts/issues"
+Changelog = "https://github.com/hypothesis/dependabot-alerts/releases"
+
+[project.scripts]
+dependabot-alerts = "dependabot_alerts.cli:cli"
+
 [tool.setuptools_scm]
 
 [tool.pytest.ini_options]
