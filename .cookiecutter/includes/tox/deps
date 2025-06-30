@@ -1,1 +1,1 @@
-tests,functests: pytest<8.4
+tests,functests: pytest
