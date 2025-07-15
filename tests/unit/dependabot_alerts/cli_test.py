@@ -9,7 +9,7 @@ def test_it(GitHub, github, subprocess, capsys, format_text):
     cli(["test-organization"])
 
     GitHub.assert_called_once_with(subprocess.run)
-    github.alerts.assert_called_once_with("test-organization")
+    github.alerts.assert_called_once_with("test-organization", ignore=[])
     format_text.assert_called_once_with(github.alerts.return_value, "test-organization")
     captured = capsys.readouterr()
     assert captured.out == f"{format_text.return_value}\n"
@@ -24,6 +24,23 @@ def test_format_slack(capsys, github, format_slack):
     )
     captured = capsys.readouterr()
     assert captured.out == f"{format_slack.return_value}\n"
+
+
+def test_it_ignores_repositories(GitHub, github, subprocess):
+    cli(
+        [
+            "--ignore-repo",
+            "org/repo1",
+            "--ignore-repo",
+            "org/repo2",
+            "test-organization",
+        ]
+    )
+
+    GitHub.assert_called_once_with(subprocess.run)
+    github.alerts.assert_called_once_with(
+        "test-organization", ignore=["org/repo1", "org/repo2"]
+    )
 
 
 def test_it_prints_nothing_if_there_are_no_alerts(capsys, format_text):

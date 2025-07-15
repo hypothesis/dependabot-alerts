@@ -14,10 +14,16 @@ def cli(argv=None):
     parser.add_argument(
         "--format", choices=["text", "slack"], default="text", help="output format"
     )
+    parser.add_argument(
+        "--ignore-repo",
+        action="append",
+        default=[],
+        help="repositories to ignore (can be used multiple times)",
+    )
     parser.add_argument("organization", help="GitHub organization")
     args = parser.parse_args(argv)
 
-    alerts = GitHub(subprocess.run).alerts(args.organization)
+    alerts = GitHub(subprocess.run).alerts(args.organization, ignore=args.ignore_repo)
 
     formatters = {
         "text": format_text,

@@ -29,7 +29,7 @@ jobs:
         run: |
           {
             echo 'SLACK_MESSAGE<<EOF'
-            dependabot-alerts --format slack hypothesis
+            dependabot-alerts --format slack --ignore-repo hypothesis/viahtml hypothesis
             echo EOF
           } >> "$GITHUB_OUTPUT"
         env:

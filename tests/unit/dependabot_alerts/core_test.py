@@ -68,6 +68,46 @@ class TestGitHub:
         run.return_value = Mock(stdout=json.dumps([]))
         assert github.alerts("hypothesis") == []
 
+    def test_alerts_filters_ignored_repositories(
+        self, github, run, alert_factory, alert_dict_factory
+    ):
+        run.return_value = Mock(
+            stdout=json.dumps(
+                [
+                    alert_dict_factory(
+                        organization="hypothesis",
+                        repo="foo",
+                        ghsa_id="GHSA-1",
+                    ),
+                    alert_dict_factory(
+                        organization="hypothesis",
+                        repo="ignored-repo",
+                        ghsa_id="GHSA-2",
+                    ),
+                    alert_dict_factory(
+                        organization="hypothesis",
+                        repo="bar",
+                        ghsa_id="GHSA-3",
+                    ),
+                ]
+            )
+        )
+
+        repos = github.alerts("hypothesis", ignore=["hypothesis/ignored-repo"])
+
+        assert repos == [
+            alert_factory(
+                organization="hypothesis",
+                repo="foo",
+                ghsa_id="GHSA-1",
+            ),
+            alert_factory(
+                organization="hypothesis",
+                repo="bar",
+                ghsa_id="GHSA-3",
+            ),
+        ]
+
     @pytest.fixture
     def run(self):
         return create_autospec(subprocess.run)
