@@ -34,7 +34,7 @@ class GitHub:
     def __init__(self, run):
         self._run = run
 
-    def alerts(self, organization) -> list[Alert]:
+    def alerts(self, organization, ignore=None) -> list[Alert]:
         try:
             result = self._run(
                 [
@@ -57,9 +57,15 @@ class GitHub:
         alert_dicts = json.loads(result.stdout)
 
         alerts: dict[Alert, Alert] = {}
+        ignore = ignore or []
 
         for alert_dict in alert_dicts:
             alert = Alert.make(alert_dict)
+
+            # Skip alerts from ignored repositories
+            if alert.repo_full_name in ignore:
+                continue
+
             if alert in alerts:
                 alerts[alert].duplicates.append(alert)
             else:
